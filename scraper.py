@@ -83,27 +83,41 @@ def convert_mth_strings ( mth_string ):
 #### VARIABLES 1.0
 
 entity_id = "FTRT3X_RBHNHSFT_gov"
-url = "http://www.rbht.nhs.uk/about/freedom-of-information/classes/spend/#transparency"
+urls = "http://www.rbht.nhs.uk/about/freedom-of-information/classes/spend/?esctl30144145pager_p={}"
 errors = 0
 data = []
+url = 'http://www.example.com'
 
 
 #### READ HTML 1.0
 
-html = urllib2.urlopen(url)
+html = urllib2.urlopen(urls)
 soup = BeautifulSoup(html, 'lxml')
 
 #### SCRAPE DATA
 
-blocks = soup.find('div', 'page-element-outer oAssetBrowser oAssetBrowserDefaultView').find_all('a')
-for block in blocks:
-    if '=Attachment' in block['href']:
-        url = 'http://www.rbht.nhs.uk'+block['href']
-        title = block.text.strip()
-        csvMth = 'Y1'
-        csvYr = block['title'].split('-')[0].strip()[-4:]
-        csvMth = convert_mth_strings(csvMth.upper())
-        data.append([csvYr, csvMth, url])
+import itertools
+
+for i in itertools.count():
+    html = urllib2.urlopen(urls.format(i+1))
+    soup = BeautifulSoup(html, 'lxml')
+    blocks = []
+    try:
+        blocks = soup.find('div', id='esctl_30144145_pnlCurrentCategory').find_all('a')
+    except:
+        pass
+    if not blocks:
+        break
+    for block in blocks:
+        if '=Attachment' in block['href']:
+            url = 'http://www.rbht.nhs.uk'+block['href']
+            title = block['title'].strip().split()
+            csvMth = title[-2][:3]
+            csvYr = title[-1][-4:]
+            csvMth = convert_mth_strings(csvMth.upper())
+            data.append([csvYr, csvMth, url])
+
+
 
 
 #### STORE DATA 1.0
